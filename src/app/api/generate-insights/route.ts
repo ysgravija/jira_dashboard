@@ -116,7 +116,7 @@ async function generateAIInsights(prompt: string, apiKey?: string) {
   }
   
   // If no API key, use mock insights for development/demo purposes
-  return generateMockInsights();
+  return generateDefaultErrorMessage();
 }
 
 function generateErrorMessage() {
@@ -125,24 +125,6 @@ function generateErrorMessage() {
 **API Configuration Needed**: To access professional Scrum Master insights, please configure your OpenAI API credentials in the settings. This will enable detailed sprint performance analysis based on your team's data.`
 }
 
-function generateMockInsights() {
-  return `
-## SPRINT STRENGTHS
-
-* **Velocity Consistency**: The team maintained a stable velocity, completing 32 story points across 14 issues, which is within 5% of the team's established capacity.
-* **Technical Excellence**: Senior team members effectively led complex implementation tasks, completing 45% of total story points while adhering to Definition of Done criteria.
-* **Backlog Prioritization**: The team appropriately allocated 70% of story points to high-value product backlog items, aligning delivery with sprint goals and product roadmap.
-
-## IMPROVEMENT OPPORTUNITIES
-
-* **Uneven Work Distribution**: Three team members completed less than 2 story points each, indicating potential skill gaps or impediments that weren't addressed in daily scrums.
-* **Story Completion Time**: Average resolution time of 4.2 days exceeds the ideal flow of completing stories throughout the sprint, suggesting stories may be too large or complex.
-* **Refinement Process**: Documentation related stories consistently fall behind, indicating a need for better backlog refinement and acceptance criteria clarity.
-
-## RECOMMENDED ACTIONS
-
-* **Implement Pair Programming**: Schedule structured pair programming sessions twice weekly, pairing experienced and less experienced team members to transfer knowledge and improve collective code ownership.
-* **Story Slicing Workshop**: Conduct a dedicated refinement session focused on breaking down larger stories into smaller, more manageable increments that can flow through the sprint more effectively.
-* **Definition of Ready Enhancement**: Update the team's Definition of Ready to ensure documentation requirements are clearly specified and estimated appropriately before sprint planning.
-  `
+function generateDefaultErrorMessage() {
+  return `AI insights are not available at this time. Please configure your OpenAI API credentials in the settings to enable AI insights.`
 } 
