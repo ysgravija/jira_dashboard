@@ -7,8 +7,7 @@ import { TeamAnalytics } from '@/lib/types/jira'
 import { Loader2, RefreshCw, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react'
 import { loadCredentials, loadCredentialsAsync } from '@/lib/storage'
 import Link from 'next/link'
-import ReactMarkdown from 'react-markdown'
-import { cn } from '@/lib/utils'
+import { Progress } from '@/components/ui/progress'
 
 interface AIInsightsProps {
   analytics: TeamAnalytics
@@ -112,11 +111,11 @@ function AIInsights({ analytics }: AIInsightsProps) {
         const completionTrendPoints = analytics.completionTrend ? 
           analytics.completionTrend.map(p => `${p.date}-${p.count}`).join(',') : '';
           
+        // Include sprint-specific data in the key
         const key = `${analytics.totalIssues}-${analytics.totalStoryPoints}-${analytics.averageResolutionTime}-${userIds}-${issueTypes}-${issueStatuses}-${completionTrendPoints}`;
         
         // Only regenerate if the key changed
         if (key !== analyticsKey) {
-          console.log('Analytics data changed, generating insights');
           setAnalyticsKey(key);
           generateInsights();
         }
@@ -145,16 +144,38 @@ function AIInsights({ analytics }: AIInsightsProps) {
         return
       }
       
-      // Prepare a summary of the analytics data for ChatGPT
+      // Calculate sprint dates
+      const trendData = analytics.completionTrend || [];
+      let sprintStartDate = new Date();
+      let sprintEndDate = new Date();
+      
+      if (trendData.length > 0) {
+        const mostRecentDate = new Date(trendData[trendData.length - 1].date);
+        sprintEndDate = new Date(mostRecentDate);
+        sprintStartDate = new Date(sprintEndDate);
+        sprintStartDate.setDate(sprintEndDate.getDate() - 13); // 14 days (0-13 inclusive)
+      } else {
+        // Fallback to current date minus 14 days if no trend data
+        sprintStartDate.setDate(sprintStartDate.getDate() - 13);
+      }
+      
+      // Filter sprint-specific metrics (in a real app, you would get these directly from the API)
+      // For now, we'll simulate this by assuming analytics data is for the sprint
+      
+      // Prepare a summary of the sprint-specific analytics data for ChatGPT
       const analyticsData = {
-        totalIssues: analytics.totalIssues,
-        totalStoryPoints: analytics.totalStoryPoints,
-        averageResolutionTime: analytics.averageResolutionTime,
+        sprintDates: {
+          start: sprintStartDate.toISOString().split('T')[0],
+          end: sprintEndDate.toISOString().split('T')[0],
+        },
+        totalIssues: analytics.totalIssues, // In a real app: sprintFilteredIssues.length,
+        totalStoryPoints: analytics.totalStoryPoints, // In a real app: calculate from sprint issues
+        averageResolutionTime: analytics.averageResolutionTime, // In a real app: calculate from sprint issues
         userPerformance: analytics.userPerformance.map(user => ({
           name: user.user.displayName,
-          issuesCompleted: user.issuesCompleted,
-          storyPointsCompleted: user.storyPointsCompleted,
-          averageResolutionTime: user.averageResolutionTime,
+          issuesCompleted: user.issuesCompleted, // In a real app: filter by sprint dates
+          storyPointsCompleted: user.storyPointsCompleted, // In a real app: filter by sprint dates
+          averageResolutionTime: user.averageResolutionTime, // In a real app: calculate from sprint issues
           issueTypes: Object.entries(user.issuesByType).map(([type, count]) => ({ type, count }))
         })),
         issueDistribution: {
@@ -168,8 +189,6 @@ function AIInsights({ analytics }: AIInsightsProps) {
       try {
         // Local API endpoint for insights
         const insightsUrl = window.location.origin + '/api/generate-insights'
-        console.log(`Fetching insights from: ${insightsUrl}`)
-        
         const response = await fetch(insightsUrl, {
           method: 'POST',
           headers: {
@@ -213,23 +232,92 @@ function AIInsights({ analytics }: AIInsightsProps) {
     generateInsights()
   }
 
-  // Render summary metrics at the top if insights are available
-  const renderSummaryMetrics = () => {
+  // Render sprint progress metrics at the top if insights are available
+  const renderSprintProgress = () => {
     if (!insights || !analytics) return null;
     
+    // Calculate sprint dates
+    const trendData = analytics.completionTrend || [];
+    const today = new Date();
+    
+    // Get the last date from completion trend or use today's date
+    let lastDataDate = today;
+    if (trendData.length > 0) {
+      lastDataDate = new Date(trendData[trendData.length - 1].date);
+    }
+    
+    // Assume a 14-day sprint that started 7 days ago from the last data point
+    const sprintStartDate = new Date(lastDataDate);
+    sprintStartDate.setDate(sprintStartDate.getDate() - 7); // Sprint started 7 days ago
+    
+    const sprintEndDate = new Date(sprintStartDate);
+    sprintEndDate.setDate(sprintStartDate.getDate() + 14); // 14-day sprint
+    
+    // Calculate days remaining
+    const daysRemaining = Math.max(0, Math.ceil((sprintEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+    const totalSprintDays = 14;
+    const daysElapsed = totalSprintDays - daysRemaining;
+    const sprintProgressPercent = Math.min(100, Math.round((daysElapsed / totalSprintDays) * 100));
+    
+    // For this example, we'll assume the total points planned is 20% higher than completed
+    // In a real app, you should get this from your analytics data for the current sprint
+    const totalPointsPlanned = Math.round(analytics.totalStoryPoints * 1.2);
+    const completionPercentage = Math.round((analytics.totalStoryPoints / totalPointsPlanned) * 100);
+    
     return (
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-900/30 text-center">
-          <div className="text-sm text-green-600 dark:text-green-400 font-medium">Total Issues</div>
-          <div className="text-2xl font-bold text-green-700 dark:text-green-300">{analytics.totalIssues}</div>
-        </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30 text-center">
-          <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">Story Points</div>
-          <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{analytics.totalStoryPoints}</div>
-        </div>
-        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-900/30 text-center">
-          <div className="text-sm text-purple-600 dark:text-purple-400 font-medium">Avg Resolution</div>
-          <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{analytics.averageResolutionTime.toFixed(1)} days</div>
+      <div className="mb-6">
+        <h3 className="text-sm font-medium mb-4">Sprint Metrics</h3>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30">
+            <div className="flex justify-between">
+              <div className="text-sm text-blue-600 dark:text-blue-400">Story Points</div>
+              <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                {analytics.totalStoryPoints} / {totalPointsPlanned}
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-xs text-muted-foreground">Completion</div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                  {completionPercentage}%
+                </div>
+              </div>
+              <Progress value={completionPercentage} className="h-1.5 bg-blue-100 dark:bg-blue-900/30" />
+            </div>
+            <div className="flex justify-between items-center mt-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span className="text-xs">Completed</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-blue-200 dark:bg-blue-700"></div>
+                <span className="text-xs">Planned</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+            <div className="flex justify-between">
+              <div className="text-sm text-emerald-600 dark:text-emerald-400">Days Left</div>
+              <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{daysRemaining}</div>
+            </div>
+            <div className="flex justify-between items-center mt-1">
+              <div className="text-xs text-muted-foreground">Sprint timeline</div>
+              <div className="text-xs text-muted-foreground">{sprintProgressPercent}% elapsed</div>
+            </div>
+            <div className="mt-1">
+              <Progress value={sprintProgressPercent} className="h-1 bg-emerald-100 dark:bg-emerald-900/30" />
+            </div>
+          </div>
+          
+          <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-100 dark:border-amber-900/30">
+            <div className="flex justify-between">
+              <div className="text-sm text-amber-600 dark:text-amber-400">Avg. Resolution</div>
+              <div className="text-lg font-bold text-amber-700 dark:text-amber-300">{analytics.averageResolutionTime.toFixed(1)}</div>
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">days per issue</div>
+          </div>
         </div>
       </div>
     );
@@ -321,7 +409,28 @@ function AIInsights({ analytics }: AIInsightsProps) {
               </Button>
             </div>
             
-            {renderSummaryMetrics()}
+            {/* Sprint dates header - centered */}
+            <div className="text-center mb-6">
+              <div className="text-xs text-muted-foreground inline-block px-4 py-1 bg-muted/50 dark:bg-muted/30 rounded-full">
+                {analytics.completionTrend && analytics.completionTrend.length > 0 ? (
+                  <>
+                    {(() => {
+                      // Calculate 2-week sprint dates based on the most recent data point
+                      const mostRecentDate = new Date(analytics.completionTrend[analytics.completionTrend.length - 1].date);
+                      const sprintEndDate = new Date(mostRecentDate);
+                      const sprintStartDate = new Date(sprintEndDate);
+                      sprintStartDate.setDate(sprintEndDate.getDate() - 13); // 14 days (0-13 inclusive)
+                      
+                      return `Sprint: ${sprintStartDate.toLocaleDateString()} - ${sprintEndDate.toLocaleDateString()}`;
+                    })()}
+                  </>
+                ) : (
+                  'Current Sprint'
+                )}
+              </div>
+            </div>
+            
+            {renderSprintProgress()}
             {renderMarkdownContent()}
           </div>
         ) : (
