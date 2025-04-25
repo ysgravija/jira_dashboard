@@ -72,6 +72,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
   const [error, setError] = useState<string | null>(null)
   const [hasOpenAIKey, setHasOpenAIKey] = useState<boolean | null>(null)
   const [analyticsKey, setAnalyticsKey] = useState<string>('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Process insights to add section icons and improve formatting
   const processedInsights = insights ? formatInsightsContent(insights) : null;
@@ -100,9 +101,9 @@ function AIInsights({ analytics }: AIInsightsProps) {
     checkOpenAIKey()
   }, [])
 
-  // Generate a key for the analytics data to track changes
+  // Generate insights when analytics data changes
   useEffect(() => {
-    if (analytics) {
+    if (analytics && hasOpenAIKey === true) {
       try {
         // Create a more detailed fingerprint of the data
         const userIds = analytics.userPerformance.map(u => u.user.emailAddress).sort().join(',');
@@ -117,18 +118,18 @@ function AIInsights({ analytics }: AIInsightsProps) {
         if (key !== analyticsKey) {
           console.log('Analytics data changed, generating insights');
           setAnalyticsKey(key);
-          // Don't auto-generate insights to avoid errors when page loads
-          // Instead, let user click the button
-          // generateInsights();
+          generateInsights();
         }
       } catch (err) {
         // If there's any error creating the fingerprint, log it but don't auto-generate
         console.error('Error creating analytics fingerprint:', err);
       }
     }
-  }, [analytics, analyticsKey]);
+  }, [analytics, hasOpenAIKey, analyticsKey]);
 
   const generateInsights = async () => {
+    if (isLoading) return; // Prevent multiple simultaneous requests
+    
     setIsLoading(true)
     setError(null)
     
@@ -202,11 +203,13 @@ function AIInsights({ analytics }: AIInsightsProps) {
       console.error('Error generating insights:', err)
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
   }
 
-  // Manually trigger insights generation
-  const handleGenerateInsights = () => {
+  // Manual refresh function
+  const refreshInsights = () => {
+    setIsRefreshing(true)
     generateInsights()
   }
 
@@ -298,31 +301,33 @@ function AIInsights({ analytics }: AIInsightsProps) {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-6">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-            <p className="text-muted-foreground">Generating insights...</p>
+            <p className="text-muted-foreground">
+              {isRefreshing ? 'Refreshing insights...' : 'Generating insights...'}
+            </p>
           </div>
         ) : insights ? (
-          <div className="bg-muted/30 dark:bg-muted/20 p-5 rounded-lg shadow-sm border dark:border-blue-900/30">
+          <div className="bg-muted/30 dark:bg-muted/20 p-5 rounded-lg shadow-sm border dark:border-blue-900/30 relative">
+            {/* Refresh button */}
+            <div className="absolute top-3 right-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={refreshInsights} 
+                disabled={isLoading}
+                title="Refresh insights"
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+              >
+                <RefreshCw size={16} />
+              </Button>
+            </div>
+            
             {renderSummaryMetrics()}
             {renderMarkdownContent()}
           </div>
         ) : (
           <div className="text-center py-6 text-muted-foreground">
             {!error ? (
-              hasOpenAIKey ? (
-                <>
-                  <p className="mb-4">Generate AI-powered insights based on your team's performance data.</p>
-                  <Button onClick={handleGenerateInsights} disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      'Generate Insights'
-                    )}
-                  </Button>
-                </>
-              ) : (
+              hasOpenAIKey === false ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mt-4 text-sm text-amber-800">
                   <p className="font-medium mb-2">OpenAI API Configuration Required</p>
                   <p className="mb-3">
@@ -334,13 +339,18 @@ function AIInsights({ analytics }: AIInsightsProps) {
                     </Button>
                   </Link>
                 </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                  <p>Preparing your insights...</p>
+                </div>
               )
             ) : (
               <div className="flex flex-col items-center">
                 <div className="text-red-500 mb-4">{error}</div>
                 <Button 
                   variant="outline" 
-                  onClick={handleGenerateInsights}
+                  onClick={refreshInsights}
                   className="flex items-center gap-2"
                 >
                   <RefreshCw size={16} />
