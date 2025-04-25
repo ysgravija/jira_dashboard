@@ -12,35 +12,33 @@ interface SprintSelectorProps {
 }
 
 function SprintSelector({ sprints, onSelectSprint, selectedSprintId }: SprintSelectorProps) {
-  // Sort sprints with active sprints first, then by state (future, closed), then by name
+  // Sort sprints by state priority and date
   const sortedSprints = [...sprints].sort((a, b) => {
-    // Active sprints always come first
-    if (a.state === 'active' && b.state !== 'active') return -1
-    if (a.state !== 'active' && b.state === 'active') return 1
-    
-    // Then sort by state priority: active > future > closed
-    const stateOrder = { active: 0, future: 1, closed: 2 }
+    // First, sort by state priority: future > active > closed
+    const stateOrder = { future: 0, active: 1, closed: 2 }
     const aOrder = stateOrder[a.state as keyof typeof stateOrder] || 3
     const bOrder = stateOrder[b.state as keyof typeof stateOrder] || 3
     
     if (aOrder !== bOrder) return aOrder - bOrder
     
-    // Finally sort by name
+    // Within the same state, sort by start date (most recent first)
+    if (a.startDate && b.startDate) {
+      return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    } else if (a.endDate && b.endDate) {
+      return new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+    }
+    
+    // Finally sort by name as a last resort
     return a.name.localeCompare(b.name)
   })
 
-  // Auto-select first active sprint if none selected
+  // Automatically select the latest sprint by default
   useEffect(() => {
-    if (!selectedSprintId && sortedSprints.length > 0) {
-      const activeSprint = sortedSprints.find(sprint => sprint.state === 'active')
-      if (activeSprint) {
-        onSelectSprint(activeSprint.id)
-      } else {
-        // If no active sprint, select the first one
-        onSelectSprint(sortedSprints[0].id)
-      }
+    if (sortedSprints.length > 0 && !selectedSprintId) {
+      // Select the first sprint in our sorted list (the latest one)
+      onSelectSprint(sortedSprints[0].id)
     }
-  }, [sprints, selectedSprintId, onSelectSprint])
+  }, [sortedSprints, selectedSprintId, onSelectSprint])
   
   function handleSelect(value: string) {
     onSelectSprint(value)

@@ -10,9 +10,9 @@ function calculateResolutionTime(created: string, resolved?: string): number {
   return Math.round(diffInMs / (1000 * 60 * 60 * 24))
 }
 
-// Get story points from the issue (customfield_10016 may vary by JIRA instance)
+// Get story points from the issue (customfield_10016 for GXB, customfield_10058 for GXS)
 function getStoryPoints(issue: JiraIssue): number {
-  return issue.fields.customfield_10016 || 0
+  return issue.fields.customfield_10016 || issue.fields.customfield_10058 || 0
 }
 
 // Group issues by user and generate performance data
@@ -118,6 +118,7 @@ export function analyzeTeamPerformance(issues: JiraIssue[]): TeamAnalytics {
     const status = issue.fields.status.name
     issuesByStatus[status] = (issuesByStatus[status] || 0) + 1
   })
+  console.log(issues[0])
   
   // Calculate total story points
   const totalStoryPoints = issues.reduce((sum, issue) => sum + getStoryPoints(issue), 0)

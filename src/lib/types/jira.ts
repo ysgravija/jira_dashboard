@@ -23,7 +23,8 @@ export interface JiraIssue {
     created: string
     updated: string
     resolutiondate?: string
-    customfield_10016?: number // Story points field - may vary based on your JIRA instance
+    customfield_10016?: number // Story points field - for GXB instance
+    customfield_10058?: number // Story points field - for GXS instance
   }
 }
 
