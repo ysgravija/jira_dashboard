@@ -1,0 +1,83 @@
+# JIRA Analyzer - Team Performance Dashboard
+
+JIRA Analyzer is a web application that provides insights into team performance based on JIRA data. It visualizes metrics such as completed tasks, story points, and resolution times for team members.
+
+## Features
+
+- Connect to any JIRA instance using API credentials
+- Select from available JIRA projects
+- View team-wide performance metrics
+- Analyze individual team member contributions
+- Visualize issue distribution by type and status
+- Track completion trends over time
+- Sprint-specific performance analytics
+- **AI-powered insights and recommendations with ChatGPT**
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, TypeScript
+- **UI Components**: Shadcn UI, Tailwind CSS
+- **Data Visualization**: Chart.js
+- **State Management**: React Context, Hooks
+- **Form Handling**: React Hook Form, Zod
+- **API Integration**: JIRA REST API, OpenAI API
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18.17 or later
+- JIRA API access token
+- (Optional) OpenAI API key for AI insights
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/jira-analyzer.git
+cd jira-analyzer
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Set up environment variables
+```bash
+# Create a .env.local file with the following (optional for AI insights)
+OPENAI_API_KEY=your_openai_api_key
+```
+
+4. Run the development server
+```bash
+npm run dev
+```
+
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Usage
+
+1. On the dashboard page, enter your JIRA credentials:
+   - JIRA Base URL (e.g., `https://your-domain.atlassian.net`)
+   - Email address associated with your JIRA account
+   - API token (can be generated in your Atlassian account settings)
+
+2. Select a project from the dropdown menu
+
+3. Navigate between tabs to view:
+   - Project Analytics: Overall project metrics
+   - Sprint Analytics: Performance metrics for specific sprints
+   - AI Insights: ChatGPT-generated analysis and recommendations
+
+4. On the AI Insights tab, click "Generate Insights" to receive AI-powered recommendations based on your team's performance data.
+
+## Notes
+
+- The application does not store your JIRA credentials - they are used only for API requests
+- For the best experience, ensure your JIRA project has story points configured (customfield_10016)
+- Performance may vary based on the size of your JIRA project
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

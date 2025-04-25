@@ -1,0 +1,115 @@
+import { promises as fs } from 'fs'
+import { NextRequest, NextResponse } from 'next/server'
+import path from 'path'
+
+// Path for settings file
+const settingsFilePath = path.join(process.cwd(), 'data', 'settings.json')
+
+// Ensure the data directory exists
+async function ensureDataDirectory() {
+  const dataDir = path.join(process.cwd(), 'data')
+  try {
+    await fs.access(dataDir)
+  } catch (error) {
+    // Directory doesn't exist, create it
+    await fs.mkdir(dataDir, { recursive: true })
+  }
+}
+
+// Load settings from file
+async function loadSettings() {
+  try {
+    await ensureDataDirectory()
+    const fileExists = await fs.access(settingsFilePath)
+      .then(() => true)
+      .catch(() => false)
+    
+    if (!fileExists) {
+      // Create default settings file if it doesn't exist
+      const defaultSettings = {
+        jira: null,
+        openai: null
+      }
+      await fs.writeFile(settingsFilePath, JSON.stringify(defaultSettings, null, 2))
+      return defaultSettings
+    }
+    
+    const data = await fs.readFile(settingsFilePath, 'utf8')
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Error loading settings:', error)
+    return { jira: null, openai: null }
+  }
+}
+
+// Save settings to file
+async function saveSettings(settings: any) {
+  try {
+    await ensureDataDirectory()
+    await fs.writeFile(settingsFilePath, JSON.stringify(settings, null, 2))
+    return true
+  } catch (error) {
+    console.error('Error saving settings:', error)
+    return false
+  }
+}
+
+// GET endpoint to load settings
+export async function GET() {
+  try {
+    const settings = await loadSettings()
+    return NextResponse.json(settings)
+  } catch (error) {
+    console.error('Error in GET /api/settings:', error)
+    return NextResponse.json(
+      { error: 'Failed to load settings' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST endpoint to save settings
+export async function POST(request: NextRequest) {
+  try {
+    const { type, credentials } = await request.json()
+    
+    if (!type || !credentials) {
+      return NextResponse.json(
+        { error: 'Type and credentials are required' },
+        { status: 400 }
+      )
+    }
+    
+    // Only allow specific setting types
+    if (type !== 'jira' && type !== 'openai') {
+      return NextResponse.json(
+        { error: 'Invalid setting type' },
+        { status: 400 }
+      )
+    }
+    
+    // Load current settings
+    const settings = await loadSettings()
+    
+    // Update the specified setting
+    settings[type] = credentials
+    
+    // Save updated settings
+    const success = await saveSettings(settings)
+    
+    if (success) {
+      return NextResponse.json({ success: true })
+    } else {
+      return NextResponse.json(
+        { error: 'Failed to save settings' },
+        { status: 500 }
+      )
+    }
+  } catch (error) {
+    console.error('Error in POST /api/settings:', error)
+    return NextResponse.json(
+      { error: 'Failed to save settings' },
+      { status: 500 }
+    )
+  }
+} 
