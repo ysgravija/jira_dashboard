@@ -2,61 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TeamAnalytics } from '@/lib/types/jira'
 import { Loader2, RefreshCw, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react'
-import { loadCredentials, loadCredentialsAsync } from '@/lib/storage'
+import { loadCredentialsAsync } from '@/lib/storage'
 import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
 
 interface AIInsightsProps {
   analytics: TeamAnalytics
 }
-
-// Custom components for ReactMarkdown
-const MarkdownComponents = {
-  h2: ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-xl font-bold text-primary mt-8 mb-4 border-b pb-2 dark:text-blue-300 dark:border-blue-800/40">
-      {children}
-    </h2>
-  ),
-  p: ({ children }: { children: React.ReactNode }) => (
-    <p className="my-2 text-foreground dark:text-zinc-200">
-      {children}
-    </p>
-  ),
-  strong: ({ children }: { children: React.ReactNode }) => (
-    <span className="font-semibold text-primary dark:text-blue-300">
-      {children}
-    </span>
-  ),
-  li: ({ children }: { children: React.ReactNode }) => {
-    // Extract the key term if it's wrapped in bold
-    let keyTerm = null;
-    let restContent = null;
-    
-    if (children && typeof children === 'string' && children.includes(':')) {
-      const parts = children.toString().split(':');
-      if (parts.length >= 2) {
-        keyTerm = parts[0].trim();
-        restContent = parts.slice(1).join(':').trim();
-      }
-    }
-    
-    return (
-      <div className="py-2 px-3 rounded-md bg-muted/40 hover:bg-muted/60 dark:bg-muted/20 dark:hover:bg-muted/30 mb-3 transition-colors">
-        {keyTerm ? (
-          <>
-            <div className="font-bold text-primary dark:text-blue-300 mb-1">{keyTerm}</div>
-            <div className="text-foreground dark:text-zinc-200">{restContent}</div>
-          </>
-        ) : (
-          <div className="text-foreground dark:text-zinc-200">{children}</div>
-        )}
-      </div>
-    );
-  },
-};
 
 // Section icons mapping
 const SectionIcons = {

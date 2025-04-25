@@ -1,23 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { marked } from 'marked'
-import sanitizeHtml from 'sanitize-html'
-import type { Token, Tokens } from 'marked'
-
-// Configure marked options to ensure consistent rendering
-marked.setOptions({
-  gfm: true,          // Enable GitHub Flavored Markdown
-  breaks: true,      // Translate line breaks to <br>
-  silent: true       // Ignore errors
-})
-
-// Configure sanitize options for security
-const sanitizeOptions = {
-  allowedTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'ul', 'ol', 'li', 'b', 'i', 'strong', 'em', 'code', 'hr', 'br', 'div', 'span'],
-  allowedAttributes: {
-    '*': ['class']
-  },
-  disallowedTagsMode: 'escape'
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,72 +32,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Function to process markdown with marked library and return clean markdown
-function processMarkdown(content: string): string {
-  // First do minimal cleanup to standardize headings and bullet points
-  let processed = normalizeMarkdown(content);
-  
-  // Parse to HTML then back to Markdown to clean up formatting issues
-  // (Not actually returning HTML, just using the parser to clean the markdown)
-  const tokens = marked.lexer(processed);
-  
-  // Now reconstruct clean markdown from tokens
-  return renderCleanMarkdown(tokens);
-}
-
-// Normalize section headers and bullet points to follow Markdown standards
-function normalizeMarkdown(content: string): string {
-  // Remove any unnecessary whitespace
-  let result = content.trim();
-  
-  // Ensure section headers use ## format (fix #, ###, etc.)
-  result = result.replace(/^(#+)\s+(.+)$/gm, (_, hashes, title) => `## ${title}`);
-  
-  // Ensure bullet points use * format (fix -, •, numbers, etc.)
-  result = result.replace(/^[\s-•]*(\d+\.|\-|\•)\s+(.+)$/gm, '* $2');
-  
-  return result;
-}
-
-// Renders clean markdown from tokens
-function renderCleanMarkdown(tokens: Token[]): string {
-  let output = '';
-  
-  for (const token of tokens) {
-    if (token.type === 'heading' && token.depth === 2) {
-      // Render h2 headings
-      output += `\n\n## ${token.text}\n\n`;
-    } else if (token.type === 'list') {
-      // Process list items
-      const listToken = token as Tokens.List;
-      for (const item of listToken.items) {
-        if (item.type === 'list_item') {
-          const itemText = item.text;
-          // Check if the item has a bold term at the start
-          if (itemText.match(/^\*\*[^*]+\*\*/)) {
-            output += `* ${itemText}\n`;
-          } else {
-            // Try to extract the first few words to make a key term
-            const words = itemText.split(':')[0].trim();
-            if (words) {
-              output += `* **${words}**: ${itemText.substring(words.length + 1).trim()}\n`;
-            } else {
-              output += `* ${itemText}\n`;
-            }
-          }
-        }
-      }
-      output += '\n';
-    } else if (token.type === 'paragraph') {
-      output += `${token.text}\n\n`;
-    } else if (token.type === 'space') {
-      output += '\n';
-    }
-  }
-  
-  return output.trim();
 }
 
 function constructAIPrompt(data: any) {

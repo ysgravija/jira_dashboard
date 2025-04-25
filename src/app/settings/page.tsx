@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { SettingsForm } from '@/components/dashboard/settings-form'
 import { JiraCredentials } from '@/lib/types/jira'
-import { loadCredentials, loadCredentialsAsync } from '@/lib/storage'
+import { loadCredentialsAsync } from '@/lib/storage'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
