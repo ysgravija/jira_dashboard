@@ -36,33 +36,44 @@ function constructAIPrompt(data: any) {
   const highestContributor = sortedContributors[0] || null;
   const lowestContributor = sortedContributors[sortedContributors.length - 1] || null;
   
-  // Create a simpler prompt focusing on contributor analysis
+  // Create a prompt for an expert Scrum Master analysis
   return `
-  You are an Agile coach providing a concise, insightful analysis of sprint performance data. Focus on identifying patterns in the team's efficiency and collaboration.
+  As an expert Scrum Master, analyze this sprint data to provide insights and recommendations following Scrum best practices.
   
-  TEAM PERFORMANCE METRICS:
-  - Total Issues: ${data.totalIssues}
-  - Total Story Points: ${data.totalStoryPoints}
-  - Average Resolution Time: ${data.averageResolutionTime} days
+  SPRINT PERFORMANCE METRICS:
+  - Total Issues Completed: ${data.totalIssues}
+  - Total Story Points Delivered: ${data.totalStoryPoints}
+  - Average Issue Resolution Time: ${data.averageResolutionTime} days
   
   TEAM MEMBER CONTRIBUTIONS:
   ${sortedContributors.map((user: any) => 
     `- ${user.name}:
      * Issues Completed: ${user.issuesCompleted}
-     * Story Points Completed: ${user.storyPointsCompleted}
+     * Story Points Delivered: ${user.storyPointsCompleted}
      * Average Resolution Time: ${user.averageResolutionTime} days`
   ).join('\n\n')}
   
-  Analyze the data above and provide a concise summary with these three clearly labeled sections:
+  Analyze this sprint data through the lens of Scrum principles and provide a structured retrospective with these three clearly labeled sections:
   
-  1. "WORKING WELL" - Identify 2-3 strengths or positive patterns based on the data (team velocity, specific contributors, balanced workload, etc.)
+  ## SPRINT STRENGTHS
+  Identify 3 key strengths demonstrated in this sprint, focusing on team velocity, collaboration, story point achievement, and adherence to Scrum practices. Support with specific data points.
   
-  2. "NEEDS ATTENTION" - Highlight 2-3 concerning trends or areas needing improvement (bottlenecks, uneven workloads, long resolution times, etc.)
+  ## IMPROVEMENT OPPORTUNITIES
+  Highlight 3 areas needing improvement based on Scrum principles, such as sprint planning accuracy, workload balance, story point estimation, or impediment removal. Support with specific data points.
   
-  3. "ACTIONABLE IMPROVEMENTS" - Recommend 2-3 specific, practical actions to enhance team performance in the next sprint
+  ## RECOMMENDED ACTIONS
+  Recommend 3 specific, actionable improvements for the next sprint that follow Scrum best practices. Include concrete suggestions for the team's process, collaboration, and delivery that will help them better achieve sprint goals.
   
-  Keep your entire response under 200 words, with short bullet points for easy reading. Be direct, practical, and solutions-oriented. Use data to support your insights.
+  Format your response with proper Markdown using ## for section headers and bullet points with * for each point. Start each bullet point with a bolded key term in **asterisks** followed by a concise explanation. Use professional language appropriate for a Scrum retrospective.
   `
+}
+
+function getSystemPrompt() {
+  return `
+  You are an expert Scrum Master with 10+ years of experience guiding agile teams to success. Your responsibility is to analyze sprint data, identify patterns, and provide actionable advice following Scrum best practices. 
+  Your insights should help the team improve their velocity, collaboration, and delivery quality while addressing impediments and fostering continuous improvement.
+  You should be able to provide a detailed analysis of the sprint data, including strengths, areas for improvement, and recommended actions.
+  `;
 }
 
 async function generateAIInsights(prompt: string, apiKey?: string) {
@@ -78,7 +89,10 @@ async function generateAIInsights(prompt: string, apiKey?: string) {
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are an experienced Agile coach who provides concise, data-driven insights to help teams improve their sprint performance.' },
+            { 
+              role: 'system', 
+              content: getSystemPrompt() 
+            },
             { role: 'user', content: prompt }
           ],
           temperature: 0.7,
@@ -106,27 +120,29 @@ async function generateAIInsights(prompt: string, apiKey?: string) {
 }
 
 function generateErrorMessage() {
-  return `Error: No API key provided. Please configure your API credentials in the settings.`
+  return `## Configuration Required
+
+**API Configuration Needed**: To access professional Scrum Master insights, please configure your OpenAI API credentials in the settings. This will enable detailed sprint performance analysis based on your team's data.`
 }
 
 function generateMockInsights() {
   return `
-## WORKING WELL
+## SPRINT STRENGTHS
 
-* **Consistent Delivery**: The team completed 32 story points across 14 issues, maintaining a steady velocity compared to previous sprints.
-* **Top Performers**: Alice and Bob handled 45% of the total story points, demonstrating strong technical leadership.
-* **Issue Distribution**: Core features received appropriate attention with 70% of story points allocated to user-facing functionality.
+* **Velocity Consistency**: The team maintained a stable velocity, completing 32 story points across 14 issues, which is within 5% of the team's established capacity.
+* **Technical Excellence**: Senior team members effectively led complex implementation tasks, completing 45% of total story points while adhering to Definition of Done criteria.
+* **Backlog Prioritization**: The team appropriately allocated 70% of story points to high-value product backlog items, aligning delivery with sprint goals and product roadmap.
 
-## NEEDS ATTENTION
+## IMPROVEMENT OPPORTUNITIES
 
-* **Uneven Workload**: Three team members completed less than 2 story points each, indicating potential bottlenecks or skill gaps.
-* **Long Resolution Times**: Average resolution time of 4.2 days exceeds the target of 3 days, particularly for bug fixes.
-* **Documentation Tasks**: Only 2 documentation issues were completed, continuing a downward trend from previous sprints.
+* **Uneven Work Distribution**: Three team members completed less than 2 story points each, indicating potential skill gaps or impediments that weren't addressed in daily scrums.
+* **Story Completion Time**: Average resolution time of 4.2 days exceeds the ideal flow of completing stories throughout the sprint, suggesting stories may be too large or complex.
+* **Refinement Process**: Documentation related stories consistently fall behind, indicating a need for better backlog refinement and acceptance criteria clarity.
 
-## ACTIONABLE IMPROVEMENTS
+## RECOMMENDED ACTIONS
 
-* **Pair Programming**: Schedule regular sessions between high and low contributors to share knowledge and balance the workload.
-* **Task Breakdown**: Break larger tasks into smaller components that can be completed within 2-3 days to improve flow.
-* **Sprint Planning**: Allocate specific capacity for documentation and testing to ensure these areas receive adequate attention.
+* **Implement Pair Programming**: Schedule structured pair programming sessions twice weekly, pairing experienced and less experienced team members to transfer knowledge and improve collective code ownership.
+* **Story Slicing Workshop**: Conduct a dedicated refinement session focused on breaking down larger stories into smaller, more manageable increments that can flow through the sprint more effectively.
+* **Definition of Ready Enhancement**: Update the team's Definition of Ready to ensure documentation requirements are clearly specified and estimated appropriately before sprint planning.
   `
 } 
