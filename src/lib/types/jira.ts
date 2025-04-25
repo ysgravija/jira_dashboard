@@ -45,6 +45,7 @@ export interface TeamPerformanceData {
 export interface TeamAnalytics {
   totalIssues: number
   totalStoryPoints: number
+  totalClosedStoryPoints: number
   averageResolutionTime: number // in days
   userPerformance: TeamPerformanceData[]
   issuesByType: Record<string, number>

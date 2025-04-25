@@ -121,7 +121,15 @@ export function analyzeTeamPerformance(issues: JiraIssue[]): TeamAnalytics {
   
   // Calculate total story points
   const totalStoryPoints = issues.reduce((sum, issue) => sum + getStoryPoints(issue), 0)
-  
+
+  // Calculate total closed story points
+  const totalClosedStoryPoints = issues.reduce((sum, issue) => {
+    if (issue.fields.status.name === 'Closed') {
+      return sum + getStoryPoints(issue)
+    }
+    return sum
+  }, 0)
+
   // Calculate average resolution time for completed issues
   const completedIssues = issues.filter(issue => issue.fields.resolutiondate)
   let averageResolutionTime = 0
@@ -136,6 +144,7 @@ export function analyzeTeamPerformance(issues: JiraIssue[]): TeamAnalytics {
   return {
     totalIssues: issues.length,
     totalStoryPoints,
+    totalClosedStoryPoints,
     averageResolutionTime,
     userPerformance: generateUserPerformance(issues),
     issuesByType,

@@ -125,6 +125,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
         },
         totalIssues: analytics.totalIssues, // In a real app: sprintFilteredIssues.length,
         totalStoryPoints: analytics.totalStoryPoints, // In a real app: calculate from sprint issues
+        totalClosedStoryPoints: analytics.totalClosedStoryPoints, // In a real app: calculate from sprint issues
         averageResolutionTime: analytics.averageResolutionTime, // In a real app: calculate from sprint issues
         userPerformance: analytics.userPerformance.map(user => ({
           name: user.user.displayName,
@@ -228,17 +229,24 @@ function AIInsights({ analytics }: AIInsightsProps) {
             <div className="flex justify-between">
               <div className="text-sm text-blue-600 dark:text-blue-400">Story Points</div>
               <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                {analytics.totalStoryPoints} / {totalPointsPlanned}
+                {analytics.totalClosedStoryPoints} / {analytics.totalStoryPoints}
               </div>
             </div>
             <div className="mt-2">
               <div className="flex justify-between items-center mb-1">
                 <div className="text-xs text-muted-foreground">Completion</div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                  {completionPercentage}%
+                  {analytics.totalStoryPoints > 0 
+                    ? Math.round((analytics.totalClosedStoryPoints / analytics.totalStoryPoints) * 100)
+                    : 0}%
                 </div>
               </div>
-              <Progress value={completionPercentage} className="h-1.5 bg-blue-100 dark:bg-blue-900/30" />
+              <Progress 
+                value={analytics.totalStoryPoints > 0 
+                  ? Math.round((analytics.totalClosedStoryPoints / analytics.totalStoryPoints) * 100) 
+                  : 0} 
+                className="h-1.5 bg-blue-100 dark:bg-blue-900/30" 
+              />
             </div>
             <div className="flex justify-between items-center mt-2">
               <div className="flex items-center gap-1.5">
@@ -247,7 +255,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-blue-200 dark:bg-blue-700"></div>
-                <span className="text-xs">Planned</span>
+                <span className="text-xs">Total</span>
               </div>
             </div>
           </div>
