@@ -215,10 +215,10 @@ function AIInsights({ analytics }: AIInsightsProps) {
     const daysElapsed = totalSprintDays - daysRemaining;
     const sprintProgressPercent = Math.min(100, Math.round((daysElapsed / totalSprintDays) * 100));
     
-    // For this example, we'll assume the total points planned is 20% higher than completed
-    // In a real app, you should get this from your analytics data for the current sprint
-    const totalPointsPlanned = Math.round(analytics.totalStoryPoints * 1.2);
-    const completionPercentage = Math.round((analytics.totalStoryPoints / totalPointsPlanned) * 100);
+    // Story point calculations - using committed story points vs completed story points
+    const completionPercentage = analytics.totalStoryPoints > 0 
+      ? Math.round((analytics.totalClosedStoryPoints / analytics.totalStoryPoints) * 100)
+      : 0;
     
     return (
       <div className="mb-6">
@@ -236,15 +236,11 @@ function AIInsights({ analytics }: AIInsightsProps) {
               <div className="flex justify-between items-center mb-1">
                 <div className="text-xs text-muted-foreground">Completion</div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                  {analytics.totalStoryPoints > 0 
-                    ? Math.round((analytics.totalClosedStoryPoints / analytics.totalStoryPoints) * 100)
-                    : 0}%
+                  {completionPercentage}%
                 </div>
               </div>
               <Progress 
-                value={analytics.totalStoryPoints > 0 
-                  ? Math.round((analytics.totalClosedStoryPoints / analytics.totalStoryPoints) * 100) 
-                  : 0} 
+                value={completionPercentage} 
                 className="h-1.5 bg-blue-100 dark:bg-blue-900/30" 
               />
             </div>
@@ -255,7 +251,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-blue-200 dark:bg-blue-700"></div>
-                <span className="text-xs">Total</span>
+                <span className="text-xs">Committed</span>
               </div>
             </div>
           </div>
