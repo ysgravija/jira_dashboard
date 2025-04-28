@@ -2,10 +2,23 @@
 
 type CredentialType = 'jira' | 'openai';
 
+// Type definitions for credentials
+interface JiraCredentials {
+  baseUrl: string;
+  email: string;
+  apiToken: string;
+}
+
+interface OpenAICredentials {
+  apiKey: string;
+}
+
+type CredentialValue = JiraCredentials | OpenAICredentials | null;
+
 /**
  * Save credentials to both local storage and server file
  */
-export async function saveCredentials(type: CredentialType, credentials: any): Promise<void> {
+export async function saveCredentials(type: CredentialType, credentials: CredentialValue): Promise<void> {
   try {
     // Save to local storage
     localStorage.setItem(`${type}_credentials`, JSON.stringify(credentials));

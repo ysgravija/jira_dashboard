@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TeamAnalytics, TeamPerformanceData } from '@/lib/types/jira'
+import { TeamAnalytics } from '@/lib/types/jira'
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -137,4 +137,4 @@ function TeamPerformanceTable({ analytics }: TeamPerformanceTableProps) {
   )
 }
 
-export { TeamPerformanceTable } 
+export { TeamPerformanceTable }

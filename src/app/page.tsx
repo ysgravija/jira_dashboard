@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function HomePage() {
   return (
@@ -10,7 +10,7 @@ export default function HomePage() {
           JIRA Team Performance Analyzer
         </h1>
         <p className="text-xl text-muted-foreground">
-          Track your team's performance metrics using JIRA data. Get insights into completed tasks, story points, resolution times, and more.
+          Track your team&apos;s performance metrics using JIRA data. Get insights into completed tasks, story points, resolution times, and more.
         </p>
         <Button size="lg" asChild>
           <Link href="/dashboard">

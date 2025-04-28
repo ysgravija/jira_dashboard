@@ -1,9 +1,6 @@
 'use server'
 
-import { createSafeActionClient } from 'next-safe-action'
 import { 
-  FetchProjectsInputSchema,
-  TeamAnalyticsInputSchema,
   FetchProjectsResponse,
   TeamAnalyticsResponse
 } from '../types/actions'
@@ -16,9 +13,6 @@ import {
 } from '../jira/jira-service'
 import { analyzeTeamPerformance } from '../jira/analytics-service'
 import { JiraCredentials, JiraSprint } from '../types/jira'
-
-// Create the action client
-const action = createSafeActionClient()
 
 // Define server actions
 export async function fetchJiraProjects(credentials: JiraCredentials): Promise<FetchProjectsResponse> {

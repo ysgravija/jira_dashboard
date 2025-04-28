@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Define proper types for the analytics data
+interface UserPerformance {
+  name: string;
+  issuesCompleted: number;
+  storyPointsCompleted: number;
+  averageResolutionTime: number;
+}
+
+interface AnalyticsData {
+  completedIssues: number;
+  completedStoryPoints: number;
+  averageResolutionTime: number;
+  userPerformance: UserPerformance[];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { data, apiKey } = await request.json()
@@ -34,7 +49,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function constructAIPrompt(data: any) {
+function constructAIPrompt(data: AnalyticsData) {
   // Find highest and lowest contributors based on story points
   const sortedContributors = [...data.userPerformance].sort((a, b) => 
     b.storyPointsCompleted - a.storyPointsCompleted
@@ -50,7 +65,7 @@ function constructAIPrompt(data: any) {
   - Average Issue Resolution Time: ${data.averageResolutionTime} days
   
   TEAM MEMBER CONTRIBUTIONS:
-  ${sortedContributors.map((user: any) => 
+  ${sortedContributors.map((user: UserPerformance) => 
     `- ${user.name}:
      * Issues Completed: ${user.issuesCompleted}
      * Story Points Delivered: ${user.storyPointsCompleted}
