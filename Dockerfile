@@ -33,11 +33,10 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/scripts/generate-settings.js ./scripts/generate-settings.js
+COPY --from=builder /app/scripts ./scripts
 
-# Create a startup script
-RUN echo '#!/bin/sh\nnode ./scripts/generate-settings.js\nexec node server.js' > ./start.sh && \
-    chmod +x ./start.sh
+# Make the generate-settings script executable
+RUN chmod +x ./scripts/generate-settings.js
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
@@ -52,5 +51,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Start the application with the wrapper script
-CMD ["./start.sh"] 
+# Start directly with a command instead of script file
+CMD node ./scripts/generate-settings.js && node server.js 
