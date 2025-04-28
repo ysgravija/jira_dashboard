@@ -21,6 +21,7 @@ JIRA Analyzer is a web application that provides insights into team performance 
 - **State Management**: React Context, Hooks
 - **Form Handling**: React Hook Form, Zod
 - **API Integration**: JIRA REST API, OpenAI API
+- **Testing**: Playwright for end-to-end testing
 
 ## Getting Started
 
@@ -92,6 +93,50 @@ docker compose up -d
    - AI Insights: ChatGPT-generated analysis and recommendations
 
 4. On the AI Insights tab, click "Generate Insights" to receive AI-powered recommendations based on your team's performance data.
+
+## End-to-End Testing
+
+This project uses Playwright for end-to-end testing. The tests verify that the application works correctly from a user's perspective.
+
+### Running Tests
+
+1. Install Playwright browsers if you haven't already:
+```bash
+npx playwright install
+```
+
+2. Run all tests:
+```bash
+npm run test:e2e
+```
+
+3. Run tests with UI mode for debugging:
+```bash
+npm run test:e2e:ui
+```
+
+4. Run tests in headed mode (visible browser):
+```bash
+npm run test:e2e:headed
+```
+
+5. Run tests in debug mode:
+```bash
+npm run test:e2e:debug
+```
+
+6. Generate tests with Codegen:
+```bash
+npm run test:codegen
+```
+
+### Test Structure
+
+- `tests/home.spec.ts`: Tests for the home page
+- `tests/dashboard.spec.ts`: Tests for the dashboard page
+- `tests/settings.spec.ts`: Tests for the settings page
+- `tests/authenticated-dashboard.spec.ts`: Tests for authenticated dashboard features
+- `tests/auth.setup.ts`: Authentication setup for tests
 
 ## Notes
 

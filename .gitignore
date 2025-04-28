@@ -46,3 +46,10 @@ next-env.d.ts
 # Application data
 /data/
 settings.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
