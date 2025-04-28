@@ -125,7 +125,8 @@ function AIInsights({ analytics }: AIInsightsProps) {
         },
         totalIssues: analytics.totalIssues, // In a real app: sprintFilteredIssues.length,
         totalStoryPoints: analytics.totalStoryPoints, // In a real app: calculate from sprint issues
-        totalClosedStoryPoints: analytics.totalClosedStoryPoints, // In a real app: calculate from sprint issues
+        completedStoryPoints: analytics.completedStoryPoints, // In a real app: calculate from sprint issues
+        completedIssues: analytics.completedIssues, // In a real app: calculate from sprint issues
         averageResolutionTime: analytics.averageResolutionTime, // In a real app: calculate from sprint issues
         userPerformance: analytics.userPerformance.map(user => ({
           name: user.user.displayName,
@@ -217,7 +218,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
     
     // Story point calculations - using committed story points vs completed story points
     const completionPercentage = analytics.totalStoryPoints > 0 
-      ? Math.round((analytics.totalClosedStoryPoints / analytics.totalStoryPoints) * 100)
+      ? Math.round((analytics.completedStoryPoints / analytics.totalStoryPoints) * 100)
       : 0;
     
     return (
@@ -229,7 +230,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
             <div className="flex justify-between">
               <div className="text-sm text-blue-600 dark:text-blue-400">Story Points</div>
               <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                {analytics.totalClosedStoryPoints} / {analytics.totalStoryPoints}
+                {analytics.completedStoryPoints} / {analytics.totalStoryPoints}
               </div>
             </div>
             <div className="mt-2">

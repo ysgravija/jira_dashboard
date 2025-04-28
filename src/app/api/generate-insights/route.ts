@@ -39,17 +39,14 @@ function constructAIPrompt(data: any) {
   const sortedContributors = [...data.userPerformance].sort((a, b) => 
     b.storyPointsCompleted - a.storyPointsCompleted
   );
-  
-  const highestContributor = sortedContributors[0] || null;
-  const lowestContributor = sortedContributors[sortedContributors.length - 1] || null;
-  
+    
   // Create a prompt for an expert Scrum Master analysis
   return `
   As an expert Scrum Master, analyze this sprint data to provide insights and recommendations following Scrum best practices.
   
   SPRINT PERFORMANCE METRICS:
-  - Total Issues Completed: ${data.totalIssues}
-  - Total Story Points Delivered: ${data.totalStoryPoints}
+  - Total Issues Completed: ${data.completedIssues}
+  - Total Story Points Delivered: ${data.completedStoryPoints}
   - Average Issue Resolution Time: ${data.averageResolutionTime} days
   
   TEAM MEMBER CONTRIBUTIONS:
