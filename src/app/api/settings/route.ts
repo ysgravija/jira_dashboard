@@ -5,19 +5,36 @@ import path from 'path'
 // Path for settings file
 const settingsFilePath = path.join(process.cwd(), 'data', 'settings.json')
 
+// Define settings types
+interface JiraCredentials {
+  baseUrl: string;
+  email: string;
+  apiToken: string;
+}
+
+interface OpenAICredentials {
+  apiKey: string;
+}
+
+interface Settings {
+  jira: JiraCredentials | null;
+  openai: OpenAICredentials | null;
+  [key: string]: JiraCredentials | OpenAICredentials | null; // Index signature for dynamic access
+}
+
 // Ensure the data directory exists
 async function ensureDataDirectory() {
   const dataDir = path.join(process.cwd(), 'data')
   try {
     await fs.access(dataDir)
-  } catch (error) {
+  } catch {
     // Directory doesn't exist, create it
     await fs.mkdir(dataDir, { recursive: true })
   }
 }
 
 // Load settings from file
-async function loadSettings() {
+async function loadSettings(): Promise<Settings> {
   try {
     await ensureDataDirectory()
     const fileExists = await fs.access(settingsFilePath)
@@ -26,7 +43,7 @@ async function loadSettings() {
     
     if (!fileExists) {
       // Create default settings file if it doesn't exist
-      const defaultSettings = {
+      const defaultSettings: Settings = {
         jira: null,
         openai: null
       }
@@ -35,7 +52,7 @@ async function loadSettings() {
     }
     
     const data = await fs.readFile(settingsFilePath, 'utf8')
-    return JSON.parse(data)
+    return JSON.parse(data) as Settings
   } catch (error) {
     console.error('Error loading settings:', error)
     return { jira: null, openai: null }
@@ -43,7 +60,7 @@ async function loadSettings() {
 }
 
 // Save settings to file
-async function saveSettings(settings: any) {
+async function saveSettings(settings: Settings) {
   try {
     await ensureDataDirectory()
     await fs.writeFile(settingsFilePath, JSON.stringify(settings, null, 2))

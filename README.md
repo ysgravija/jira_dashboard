@@ -29,13 +29,14 @@ JIRA Analyzer is a web application that provides insights into team performance 
 - Node.js 18.17 or later
 - JIRA API access token
 - (Optional) OpenAI API key for AI insights
+- (Optional) Docker and Docker Compose for containerized deployment
 
 ### Installation
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/jira-analyzer.git
-cd jira-analyzer
+git clone https://github.com/yourusername/jira-dashboard.git
+cd jira-dashboard
 ```
 
 2. Install dependencies
@@ -55,6 +56,26 @@ npm run dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Docker Deployment
+
+1. Create a `.env` file with your credentials:
+```bash
+# Jira settings
+JIRA_BASE_URL=https://your-jira-instance.atlassian.net
+JIRA_EMAIL=your-email@example.com
+JIRA_API_TOKEN=your-jira-api-token
+
+# OpenAI settings
+OPENAI_API_KEY=your-openai-api-key
+```
+
+2. Build and run with Docker Compose:
+```bash
+docker compose up -d
+```
+
+3. Access the application at [http://localhost:3000](http://localhost:3000)
 
 ## Usage
 

@@ -1,4 +1,4 @@
-import { JiraIssue, TeamAnalytics, TeamPerformanceData, JiraUser } from '../types/jira'
+import { JiraIssue, TeamAnalytics, TeamPerformanceData } from '../types/jira'
 
 // Helper function to calculate resolution time in days
 function calculateResolutionTime(created: string, resolved?: string): number {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TeamAnalytics } from '@/lib/types/jira'
@@ -40,48 +40,8 @@ function AIInsights({ analytics }: AIInsightsProps) {
       .trim();
   }
 
-  // Check if OpenAI API key is available
-  useEffect(() => {
-    async function checkOpenAIKey() {
-      try {
-        const openAICredentials = await loadCredentialsAsync<{ apiKey: string }>('openai')
-        setHasOpenAIKey(Boolean(openAICredentials?.apiKey))
-      } catch (err) {
-        console.error('Error checking OpenAI key:', err)
-        setHasOpenAIKey(false)
-      }
-    }
-    
-    checkOpenAIKey()
-  }, [])
-
-  // Generate insights when analytics data changes
-  useEffect(() => {
-    if (analytics && hasOpenAIKey === true) {
-      try {
-        // Create a more detailed fingerprint of the data
-        const userIds = analytics.userPerformance.map(u => u.user.emailAddress).sort().join(',');
-        const issueTypes = Object.keys(analytics.issuesByType).sort().join(',');
-        const issueStatuses = Object.keys(analytics.issuesByStatus).sort().join(',');
-        const completionTrendPoints = analytics.completionTrend ? 
-          analytics.completionTrend.map(p => `${p.date}-${p.count}`).join(',') : '';
-          
-        // Include sprint-specific data in the key
-        const key = `${analytics.totalIssues}-${analytics.totalStoryPoints}-${analytics.averageResolutionTime}-${userIds}-${issueTypes}-${issueStatuses}-${completionTrendPoints}`;
-        
-        // Only regenerate if the key changed
-        if (key !== analyticsKey) {
-          setAnalyticsKey(key);
-          generateInsights();
-        }
-      } catch (err) {
-        // If there's any error creating the fingerprint, log it but don't auto-generate
-        console.error('Error creating analytics fingerprint:', err);
-      }
-    }
-  }, [analytics, hasOpenAIKey, analyticsKey]);
-
-  const generateInsights = async () => {
+  // Define generateInsights function using useCallback to avoid dependencies issues
+  const generateInsights = useCallback(async () => {
     if (isLoading) return; // Prevent multiple simultaneous requests
     
     setIsLoading(true)
@@ -181,7 +141,48 @@ function AIInsights({ analytics }: AIInsightsProps) {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }
+  }, [analytics, isLoading]); // Add dependencies here
+
+  // Check if OpenAI API key is available
+  useEffect(() => {
+    async function checkOpenAIKey() {
+      try {
+        const openAICredentials = await loadCredentialsAsync<{ apiKey: string }>('openai')
+        setHasOpenAIKey(Boolean(openAICredentials?.apiKey))
+      } catch (err) {
+        console.error('Error checking OpenAI key:', err)
+        setHasOpenAIKey(false)
+      }
+    }
+    
+    checkOpenAIKey()
+  }, [])
+
+  // Generate insights when analytics data changes
+  useEffect(() => {
+    if (analytics && hasOpenAIKey === true) {
+      try {
+        // Create a more detailed fingerprint of the data
+        const userIds = analytics.userPerformance.map(u => u.user.emailAddress).sort().join(',');
+        const issueTypes = Object.keys(analytics.issuesByType).sort().join(',');
+        const issueStatuses = Object.keys(analytics.issuesByStatus).sort().join(',');
+        const completionTrendPoints = analytics.completionTrend ? 
+          analytics.completionTrend.map(p => `${p.date}-${p.count}`).join(',') : '';
+          
+        // Include sprint-specific data in the key
+        const key = `${analytics.totalIssues}-${analytics.totalStoryPoints}-${analytics.averageResolutionTime}-${userIds}-${issueTypes}-${issueStatuses}-${completionTrendPoints}`;
+        
+        // Only regenerate if the key changed
+        if (key !== analyticsKey) {
+          setAnalyticsKey(key);
+          generateInsights();
+        }
+      } catch (err) {
+        // If there's any error creating the fingerprint, log it but don't auto-generate
+        console.error('Error creating analytics fingerprint:', err);
+      }
+    }
+  }, [analytics, hasOpenAIKey, analyticsKey, generateInsights]);
 
   // Manual refresh function
   const refreshInsights = () => {

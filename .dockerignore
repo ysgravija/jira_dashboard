@@ -1,0 +1,34 @@
+# Versioning and metadata
+.git
+.gitignore
+.dockerignore
+
+# Build dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment (contains sensitive data)
+.env
+.env.*
+
+# Files not required for production
+README.md
+CHANGELOG.md
+**/tests
+**/.eslintrc
+**/.eslintignore
+**/.prettierrc
+**/.prettierignore
+**/jest.config.js
+**/cypress
+**/coverage
+
+# Next.js build artifacts
+.next
+out
+
+# Docker files
+Dockerfile
+docker-compose.yml 

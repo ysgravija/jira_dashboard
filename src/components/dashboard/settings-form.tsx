@@ -81,7 +81,7 @@ export function SettingsForm({
       toast({
         title: 'Error',
         description: 'Failed to save JIRA credentials.',
-        variant: 'destructive',
+        className: "bg-red-100 border-red-400 text-red-800",
       })
     }
   }
@@ -99,7 +99,7 @@ export function SettingsForm({
       toast({
         title: 'Error',
         description: 'Failed to save OpenAI API key.',
-        variant: 'destructive',
+        className: "bg-red-100 border-red-400 text-red-800",
       })
     }
   }

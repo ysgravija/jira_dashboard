@@ -9,6 +9,7 @@ import {
   fetchSprintAnalytics
 } from '@/lib/actions/jira-actions'
 import { JiraCredentials, JiraProject, TeamAnalytics, JiraSprint } from '@/lib/types/jira'
+import { loadCredentialsAsync } from '@/lib/storage'
 import { CredentialsForm } from '@/components/dashboard/credentials-form'
 import { ProjectSelector } from '@/components/dashboard/project-selector'
 import { SprintSelector } from '@/components/dashboard/sprint-selector'
@@ -18,7 +19,6 @@ import { IssueDistributionChart } from '@/components/dashboard/issue-distributio
 import { CompletionTrendChart } from '@/components/dashboard/completion-trend-chart'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AIInsights } from '@/components/dashboard/ai-insights'
-import { loadCredentials, loadCredentialsAsync } from '@/lib/storage'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
 
@@ -27,8 +27,6 @@ export default function DashboardPage() {
   const [credentials, setCredentials] = useState<JiraCredentials | null>(null)
   const [projects, setProjects] = useState<JiraProject[]>([])
   const [selectedProjectKey, setSelectedProjectKey] = useState<string>('')
-  const [boards, setBoards] = useState<{ id: string, name: string }[]>([])
-  const [selectedBoardId, setSelectedBoardId] = useState<string>('')
   const [sprints, setSprints] = useState<JiraSprint[]>([])
   const [selectedSprintId, setSelectedSprintId] = useState<string>('')
   const [analytics, setAnalytics] = useState<TeamAnalytics | null>(null)
@@ -61,7 +59,6 @@ export default function DashboardPage() {
     if (!credentials) return
     
     setSelectedProjectKey(projectKey)
-    setSelectedBoardId('')
     setSelectedSprintId('')
     setSprints([])
     setIsLoading(true)
@@ -72,11 +69,8 @@ export default function DashboardPage() {
       const boardsResult = await fetchBoardsForProject(credentials, projectKey)
       
       if (boardsResult.data && boardsResult.data.length > 0) {
-        setBoards(boardsResult.data)
-        
         // Auto-select the first board
         const firstBoardId = boardsResult.data[0].id
-        setSelectedBoardId(firstBoardId)
         
         // Fetch sprints for the selected board
         const sprintsResult = await fetchSprintsForBoard(credentials, firstBoardId)
@@ -126,6 +120,7 @@ export default function DashboardPage() {
     }
   }
   
+  /* Commented out as it's currently unused but may be needed in the future
   const handleSelectBoard = async (boardId: string) => {
     if (!credentials) return
     
@@ -148,6 +143,7 @@ export default function DashboardPage() {
       setIsLoading(false)
     }
   }
+  */
   
   const handleSelectSprint = async (sprintId: string) => {
     if (!credentials) return
