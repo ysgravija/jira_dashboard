@@ -24,7 +24,8 @@ function AIInsights({ analytics }: AIInsightsProps) {
   const [insights, setInsights] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hasOpenAIKey, setHasOpenAIKey] = useState<boolean | null>(null)
+  const [hasAIKey, setHasAIKey] = useState<boolean | null>(null)
+  const [aiProvider, setAIProvider] = useState<'openai' | 'anthropic'>('openai')
   const [analyticsKey, setAnalyticsKey] = useState<string>('')
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -435,4 +436,4 @@ function AIInsights({ analytics }: AIInsightsProps) {
   )
 }
 
-export { AIInsights } 
+export { AIInsights }
