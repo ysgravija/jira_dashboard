@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { AIProvider } from '@/lib/types/ai-provider'
 
 // Define proper types for the analytics data
 interface UserPerformance {
@@ -14,9 +15,6 @@ interface AnalyticsData {
   averageResolutionTime: number;
   userPerformance: UserPerformance[];
 }
-
-// Define AI provider types
-type AIProvider = 'openai' | 'anthropic';
 
 // Interface for AI request data
 interface AIRequestData {

@@ -1,7 +1,8 @@
+import { AIProvider } from './types/ai-provider'
+
 // Storage utility for managing API credentials
 
 type CredentialType = 'jira' | 'ai';
-type AIProviderType = 'openai' | 'anthropic';
 
 // Type definitions for credentials
 interface JiraCredentials {
@@ -11,7 +12,7 @@ interface JiraCredentials {
 }
 
 interface AICredentials {
-  provider: AIProviderType;
+  provider: AIProvider;
   apiKey: string;
 }
 
