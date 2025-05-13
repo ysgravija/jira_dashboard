@@ -15,9 +15,19 @@ interface AnalyticsData {
   userPerformance: UserPerformance[];
 }
 
+// Define AI provider types
+type AIProvider = 'openai' | 'anthropic';
+
+// Interface for AI request data
+interface AIRequestData {
+  data: AnalyticsData;
+  apiKey: string;
+  provider?: AIProvider;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { data, apiKey } = await request.json()
+    const { data, apiKey, provider = 'openai' } = await request.json() as AIRequestData
     
     if (!data) {
       return NextResponse.json(
@@ -29,11 +39,21 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    if (!apiKey) {
+      return NextResponse.json(
+        { 
+          error: 'API key is required',
+          insights: generateConfigurationRequiredMessage(provider)
+        },
+        { status: 400 }
+      )
+    }
+    
     // Construct a prompt for the AI based on the JIRA analytics data
     const prompt = constructAIPrompt(data)
     
-    // Call OpenAI API with the provided API key
-    const insights = await generateAIInsights(prompt, apiKey)
+    // Generate insights based on the selected provider
+    const insights = await generateAIInsights(prompt, apiKey, provider)
     
     // Return the raw insights without processing
     return NextResponse.json({ insights })
@@ -134,72 +154,107 @@ function getSystemPrompt() {
   `;
 }
 
-async function generateAIInsights(prompt: string, apiKey?: string) {
-  // If API key is provided, call OpenAI API
-  if (apiKey) {
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { 
-              role: 'system', 
-              content: getSystemPrompt() 
-            },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 1500
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (result.error) {
-        console.error('OpenAI API error:', result.error);
-        throw new Error(result.error.message || 'OpenAI API error');
-      }
-      
-      if (!result.choices || !result.choices[0] || !result.choices[0].message) {
-        throw new Error('Invalid response format from OpenAI API');
-      }
-      
-      const rawContent = result.choices[0].message.content;
-      
-      // Return raw content - it will be processed by the markdown library
-      return rawContent;
-    } catch (error) {
-      console.error('Error calling OpenAI API:', error);
-      // Fall back to generic error response
-      return generateErrorMessage();
-    }
+// Main function to generate AI insights based on provider
+async function generateAIInsights(prompt: string, apiKey: string, provider: AIProvider = 'openai'): Promise<string> {
+  switch (provider) {
+    case 'openai':
+      return generateOpenAIInsights(prompt, apiKey);
+    case 'anthropic':
+      return generateAnthropicInsights(prompt, apiKey);
+    default:
+      throw new Error(`Unsupported AI provider: ${provider}`);
   }
-  
-  // If no API key, use mock insights for development/demo purposes
-  return generateDefaultErrorMessage();
 }
 
-function generateErrorMessage() {
+// OpenAI-specific implementation
+async function generateOpenAIInsights(prompt: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: getSystemPrompt() 
+          },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1500
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.error) {
+      console.error('OpenAI API error:', result.error);
+      throw new Error(result.error.message || 'OpenAI API error');
+    }
+    
+    if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+      throw new Error('Invalid response format from OpenAI API');
+    }
+    
+    return result.choices[0].message.content;
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error);
+    throw error;
+  }
+}
+
+// Anthropic-specific implementation
+async function generateAnthropicInsights(prompt: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 1500,
+        temperature: 0.7,
+        system: getSystemPrompt(),
+        messages: [
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.error) {
+      console.error('Anthropic API error:', result.error);
+      throw new Error(result.error.message || 'Anthropic API error');
+    }
+    
+    if (!result.content || !result.content[0] || !result.content[0].text) {
+      throw new Error('Invalid response format from Anthropic API');
+    }
+    
+    return result.content[0].text;
+  } catch (error) {
+    console.error('Error calling Anthropic API:', error);
+    throw error;
+  }
+}
+
+// Generate provider-specific error messages
+function generateConfigurationRequiredMessage(provider: AIProvider): string {
+  const providerName = provider === 'openai' ? 'OpenAI' : 'Anthropic';
+  
   return `
 ## CONFIGURATION REQUIRED
 
-* **API Key Missing**: To access professional Scrum Master insights, please configure your OpenAI API credentials.
-* **Easy Setup**: Navigate to the settings page and enter your OpenAI API key in the appropriate field.
+* **API Key Missing**: To access professional Scrum Master insights, please configure your ${providerName} API credentials.
+* **Easy Setup**: Navigate to the settings page and enter your ${providerName} API key in the appropriate field.
 * **Benefits**: Once configured, you'll receive detailed sprint performance analysis based on your team's actual data.
   `;
 }
-
-function generateDefaultErrorMessage() {
-  return `
-## AI INSIGHTS UNAVAILABLE
-
-* **Configuration Required**: AI insights are not available at this time.
-* **API Setup Needed**: Please configure your OpenAI API credentials in the settings.
-* **Next Steps**: Visit the settings page and enter a valid OpenAI API key to enable AI-powered Scrum Master insights.
-  `;
-} 

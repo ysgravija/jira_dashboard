@@ -49,15 +49,23 @@ function AIInsights({ analytics }: AIInsightsProps) {
     setError(null)
     
     try {
-      // Get OpenAI API key from storage
-      const openAICredentials = await loadCredentialsAsync<{ apiKey: string }>('openai')
-      const apiKey = openAICredentials?.apiKey
+      // Get AI credentials from storage
+      let apiKey: string | undefined;
+      let provider: 'openai' | 'anthropic' = aiProvider;
       
-      // Check if OpenAI API key is available
+      // Load from AI storage
+      const aiCredentials = await loadCredentialsAsync<{ provider: 'openai' | 'anthropic'; apiKey: string }>('ai');
+      
+      if (aiCredentials?.apiKey) {
+        apiKey = aiCredentials.apiKey;
+        provider = aiCredentials.provider;
+      }
+      
+      // Check if API key is available
       if (!apiKey) {
-        setError('OpenAI API key is required to generate insights')
-        setIsLoading(false)
-        return
+        setError(`${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key is required to generate insights`);
+        setIsLoading(false);
+        return;
       }
       
       // Calculate sprint dates
@@ -78,7 +86,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
       // Filter sprint-specific metrics (in a real app, you would get these directly from the API)
       // For now, we'll simulate this by assuming analytics data is for the sprint
       
-      // Prepare a summary of the sprint-specific analytics data for ChatGPT
+      // Prepare a summary of the sprint-specific analytics data for AI
       const analyticsData = {
         sprintDates: {
           start: sprintStartDate.toISOString().split('T')[0],
@@ -114,7 +122,8 @@ function AIInsights({ analytics }: AIInsightsProps) {
           },
           body: JSON.stringify({ 
             data: analyticsData,
-            apiKey // Include API key from storage if available
+            apiKey,
+            provider
           })
         })
         
@@ -144,24 +153,31 @@ function AIInsights({ analytics }: AIInsightsProps) {
     }
   }, [analytics, isLoading]); // Add dependencies here
 
-  // Check if OpenAI API key is available
+  // Check if AI API key is available
   useEffect(() => {
-    async function checkOpenAIKey() {
+    async function checkAIKey() {
       try {
-        const openAICredentials = await loadCredentialsAsync<{ apiKey: string }>('openai')
-        setHasOpenAIKey(Boolean(openAICredentials?.apiKey))
+        // Load AI credentials
+        const aiCredentials = await loadCredentialsAsync<{ provider: 'openai' | 'anthropic'; apiKey: string }>('ai')
+        if (aiCredentials?.apiKey) {
+          setHasAIKey(true)
+          setAIProvider(aiCredentials.provider)
+          return
+        }
+        
+        setHasAIKey(false)
       } catch (err) {
-        console.error('Error checking OpenAI key:', err)
-        setHasOpenAIKey(false)
+        console.error('Error checking AI key:', err)
+        setHasAIKey(false)
       }
     }
     
-    checkOpenAIKey()
+    checkAIKey()
   }, [])
 
   // Generate insights when analytics data changes
   useEffect(() => {
-    if (analytics && hasOpenAIKey === true) {
+    if (analytics && hasAIKey === true) {
       try {
         // Create a more detailed fingerprint of the data
         const userIds = analytics.userPerformance.map(u => u.user.emailAddress).sort().join(',');
@@ -183,7 +199,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
         console.error('Error creating analytics fingerprint:', err);
       }
     }
-  }, [analytics, hasOpenAIKey, analyticsKey, generateInsights]);
+  }, [analytics, hasAIKey, analyticsKey, generateInsights]);
 
   // Manual refresh function
   const refreshInsights = () => {
@@ -398,11 +414,11 @@ function AIInsights({ analytics }: AIInsightsProps) {
         ) : (
           <div className="text-center py-6 text-muted-foreground">
             {!error ? (
-              hasOpenAIKey === false ? (
+              hasAIKey === false ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mt-4 text-sm text-amber-800">
-                  <p className="font-medium mb-2">OpenAI API Configuration Required</p>
+                  <p className="font-medium mb-2">AI API Configuration Required</p>
                   <p className="mb-3">
-                    To access professional Scrum Master insights, please configure your OpenAI API credentials.
+                    To access professional Scrum Master insights, please configure your AI provider credentials.
                   </p>
                   <Link href="/settings">
                     <Button variant="outline" size="sm" className="bg-white hover:bg-amber-50">
