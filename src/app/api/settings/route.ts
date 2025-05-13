@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import { NextRequest, NextResponse } from 'next/server'
+import { AICredentials, OpenAICredentials } from '@/lib/types/ai-provider'
 import path from 'path'
 
 // Path for settings file
@@ -10,15 +11,6 @@ interface JiraCredentials {
   baseUrl: string;
   email: string;
   apiToken: string;
-}
-
-interface OpenAICredentials {
-  apiKey: string;
-}
-
-interface AICredentials {
-  provider: 'openai' | 'anthropic';
-  apiKey: string;
 }
 
 interface Settings {

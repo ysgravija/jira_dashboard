@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { SettingsForm } from '@/components/dashboard/settings-form'
 import { JiraCredentials } from '@/lib/types/jira'
+import { AICredentials, OpenAICredentials } from '@/lib/types/ai-provider'
 import { loadCredentialsAsync } from '@/lib/storage'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -10,7 +11,7 @@ import { ArrowLeft } from 'lucide-react'
 
 export default function SettingsPage() {
   const [jiraCredentials, setJiraCredentials] = useState<JiraCredentials | null>(null)
-  const [aiCredentials, setAICredentials] = useState<{ provider: 'openai' | 'anthropic'; apiKey: string } | null>(null)
+  const [aiCredentials, setAICredentials] = useState<AICredentials | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
   // Load saved credentials on component mount
@@ -26,12 +27,12 @@ export default function SettingsPage() {
         }
         
         // Load AI credentials
-        const savedAICredentials = await loadCredentialsAsync<{ provider: 'openai' | 'anthropic'; apiKey: string }>('ai')
+        const savedAICredentials = await loadCredentialsAsync<AICredentials>('ai')
         if (savedAICredentials) {
           setAICredentials(savedAICredentials)
         } else {
           // For backward compatibility, check for OpenAI credentials
-          const savedOpenAICredentials = await loadCredentialsAsync<{ apiKey: string }>('openai')
+          const savedOpenAICredentials = await loadCredentialsAsync<OpenAICredentials>('openai')
           if (savedOpenAICredentials?.apiKey) {
             setAICredentials({
               provider: 'openai',

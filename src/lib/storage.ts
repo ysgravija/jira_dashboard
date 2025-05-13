@@ -1,4 +1,4 @@
-import { AIProvider } from './types/ai-provider'
+import { AICredentials, OpenAICredentials } from './types/ai-provider'
 
 // Storage utility for managing API credentials
 
@@ -11,12 +11,7 @@ interface JiraCredentials {
   apiToken: string;
 }
 
-interface AICredentials {
-  provider: AIProvider;
-  apiKey: string;
-}
-
-type CredentialValue = JiraCredentials | AICredentials | null;
+type CredentialValue = JiraCredentials | AICredentials | OpenAICredentials | null;
 
 /**
  * Save credentials to server file
