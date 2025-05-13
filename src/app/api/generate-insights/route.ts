@@ -245,14 +245,12 @@ async function generateAnthropicInsights(prompt: string, apiKey: string): Promis
 }
 
 // Generate provider-specific error messages
-function generateConfigurationRequiredMessage(provider: AIProvider): string {
-  const providerName = provider === 'openai' ? 'OpenAI' : 'Anthropic';
-  
+function generateConfigurationRequiredMessage(provider: AIProvider): string {  
   return `
 ## CONFIGURATION REQUIRED
 
-* **API Key Missing**: To access professional Scrum Master insights, please configure your ${providerName} API credentials.
-* **Easy Setup**: Navigate to the settings page and enter your ${providerName} API key in the appropriate field.
+* **API Key Missing**: To access professional Scrum Master insights, please configure your ${provider} API credentials.
+* **Easy Setup**: Navigate to the settings page and enter your ${provider} API key in the appropriate field.
 * **Benefits**: Once configured, you'll receive detailed sprint performance analysis based on your team's actual data.
   `;
 }
