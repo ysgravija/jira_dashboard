@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TeamAnalytics } from '@/lib/types/jira'
+import { AIProvider, AICredentials } from '@/lib/types/ai-provider'
 import { Loader2, RefreshCw, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react'
 import { loadCredentialsAsync } from '@/lib/storage'
 import Link from 'next/link'
@@ -25,7 +26,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasAIKey, setHasAIKey] = useState<boolean | null>(null)
-  const [aiProvider, setAIProvider] = useState<'openai' | 'anthropic'>('openai')
+  const [aiProvider, setAIProvider] = useState<AIProvider>('openai')
   const [analyticsKey, setAnalyticsKey] = useState<string>('')
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -51,10 +52,10 @@ function AIInsights({ analytics }: AIInsightsProps) {
     try {
       // Get AI credentials from storage
       let apiKey: string | undefined;
-      let provider: 'openai' | 'anthropic' = aiProvider;
+      let provider: AIProvider = aiProvider;
       
       // Load from AI storage
-      const aiCredentials = await loadCredentialsAsync<{ provider: 'openai' | 'anthropic'; apiKey: string }>('ai');
+      const aiCredentials = await loadCredentialsAsync<AICredentials>('ai');
       
       if (aiCredentials?.apiKey) {
         apiKey = aiCredentials.apiKey;
@@ -63,7 +64,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
       
       // Check if API key is available
       if (!apiKey) {
-        setError(`${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key is required to generate insights`);
+        setError(`${provider} API key is required to generate insights`);
         setIsLoading(false);
         return;
       }
@@ -158,7 +159,7 @@ function AIInsights({ analytics }: AIInsightsProps) {
     async function checkAIKey() {
       try {
         // Load AI credentials
-        const aiCredentials = await loadCredentialsAsync<{ provider: 'openai' | 'anthropic'; apiKey: string }>('ai')
+        const aiCredentials = await loadCredentialsAsync<AICredentials>('ai')
         if (aiCredentials?.apiKey) {
           setHasAIKey(true)
           setAIProvider(aiCredentials.provider)

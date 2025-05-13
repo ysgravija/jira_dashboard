@@ -2,7 +2,7 @@ import { AICredentials, OpenAICredentials } from './types/ai-provider'
 
 // Storage utility for managing API credentials
 
-type CredentialType = 'jira' | 'ai';
+type CredentialType = 'jira' | 'ai' | 'openai';
 
 // Type definitions for credentials
 interface JiraCredentials {

@@ -54,7 +54,7 @@ export default function SettingsPage() {
     setJiraCredentials(credentials)
   }
   
-  const handleAICredentialsSave = (credentials: { provider: 'openai' | 'anthropic'; apiKey: string }) => {
+  const handleAICredentialsSave = (credentials: AICredentials) => {
     setAICredentials(credentials)
   }
   

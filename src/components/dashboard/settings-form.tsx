@@ -27,6 +27,7 @@ import { JiraCredentials } from '@/lib/types/jira'
 import { saveCredentials } from '@/lib/storage'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
+import { AICredentials } from '@/lib/types/ai-provider'
 
 const jiraFormSchema = z.object({
   baseUrl: z.string().url('Please enter a valid URL'),
@@ -43,12 +44,9 @@ const aiFormSchema = z.object({
 
 interface SettingsFormProps {
   initialJiraCredentials?: JiraCredentials
-  initialAICredentials?: {
-    provider: 'openai' | 'anthropic';
-    apiKey: string;
-  }
+  initialAICredentials?: AICredentials
   onJiraCredentialsSave: (credentials: JiraCredentials) => void
-  onAICredentialsSave: (credentials: { provider: 'openai' | 'anthropic'; apiKey: string }) => void
+  onAICredentialsSave: (credentials: AICredentials) => void
 }
 
 export function SettingsForm({
@@ -100,7 +98,7 @@ export function SettingsForm({
       onAICredentialsSave(values)
       toast({
         title: 'Settings saved',
-        description: `Your ${values.provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key has been saved.`,
+        description: `Your ${values.provider} API key has been saved.`,
       })
     } catch (error) {
       console.error('Failed to save AI API key:', error)
@@ -207,14 +205,10 @@ export function SettingsForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {aiForm.watch('provider') === 'openai' ? 'OpenAI' : 'Anthropic'} API Key
+                        {aiForm.watch('provider')} API Key
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder={aiForm.watch('provider') === 'openai' ? "sk-..." : "sk-ant-..."}
-                          {...field} 
-                        />
+                      <Input type="password" placeholder="sk-..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
