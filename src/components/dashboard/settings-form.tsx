@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { JiraCredentials } from '@/lib/types/jira'
+import { DatadogCredentials } from '@/lib/types/datadog'
 import { saveCredentials } from '@/lib/storage'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
@@ -42,18 +43,27 @@ const aiFormSchema = z.object({
   apiKey: z.string().min(1, 'API key is required'),
 })
 
+const datadogFormSchema = z.object({
+  apiToken: z.string().min(1, 'API token is required'),
+  appToken: z.string().min(1, 'App token is required'),
+})
+
 interface SettingsFormProps {
   initialJiraCredentials?: JiraCredentials
   initialAICredentials?: AICredentials
+  initialDatadogCredentials?: DatadogCredentials
   onJiraCredentialsSave: (credentials: JiraCredentials) => void
   onAICredentialsSave: (credentials: AICredentials) => void
+  onDatadogCredentialsSave: (credentials: DatadogCredentials) => void
 }
 
 export function SettingsForm({
   initialJiraCredentials,
   initialAICredentials,
+  initialDatadogCredentials,
   onJiraCredentialsSave,
   onAICredentialsSave,
+  onDatadogCredentialsSave,
 }: SettingsFormProps) {
   const [activeTab, setActiveTab] = useState<string>('jira')
 
@@ -71,6 +81,14 @@ export function SettingsForm({
     defaultValues: initialAICredentials || {
       provider: 'openai',
       apiKey: '',
+    },
+  })
+
+  const datadogForm = useForm<z.infer<typeof datadogFormSchema>>({
+    resolver: zodResolver(datadogFormSchema),
+    defaultValues: initialDatadogCredentials || {
+      apiToken: '',
+      appToken: '',
     },
   })
 
@@ -110,19 +128,38 @@ export function SettingsForm({
     }
   }
 
+  const handleDatadogSubmit = async (values: z.infer<typeof datadogFormSchema>) => {
+    try {
+      await saveCredentials('datadog', values)
+      onDatadogCredentialsSave(values)
+      toast({
+        title: 'Settings saved',
+        description: 'Your Datadog credentials have been saved in the application.',
+      })
+    } catch (error) {
+      console.error('Failed to save Datadog credentials:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to save Datadog credentials.',
+        className: "bg-red-100 border-red-400 text-red-800",
+      })
+    }
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Settings</CardTitle>
         <CardDescription>
-          Configure your API credentials for JIRA and AI providers
+          Configure your API credentials for JIRA, AI providers, and Datadog
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="jira">JIRA API</TabsTrigger>
             <TabsTrigger value="ai">AI Provider</TabsTrigger>
+            <TabsTrigger value="datadog">Datadog</TabsTrigger>
           </TabsList>
           
           <TabsContent value="jira">
@@ -215,6 +252,40 @@ export function SettingsForm({
                   )}
                 />
                 <Button type="submit" className="w-full">Save AI Settings</Button>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="datadog">
+            <Form {...datadogForm}>
+              <form onSubmit={datadogForm.handleSubmit(handleDatadogSubmit)} className="space-y-4">
+                <FormField
+                  control={datadogForm.control}
+                  name="apiToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Datadog API Token</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Your Datadog API token" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={datadogForm.control}
+                  name="appToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Datadog App Token</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Your Datadog App token" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full">Save Datadog Settings</Button>
               </form>
             </Form>
           </TabsContent>
