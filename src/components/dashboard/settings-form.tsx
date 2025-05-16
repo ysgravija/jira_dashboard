@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { z } from 'zod'
+import * as z from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,7 @@ import { saveCredentials } from '@/lib/storage'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
 import { AICredentials } from '@/lib/types/ai-provider'
+import { FEATURE_FLAGS } from '@/lib/feature-flags'
 
 const jiraFormSchema = z.object({
   baseUrl: z.string().url('Please enter a valid URL'),
@@ -156,10 +157,12 @@ export function SettingsForm({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className={`grid w-full mb-4 ${FEATURE_FLAGS.DATADOG_ANALYTICS ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="jira">JIRA API</TabsTrigger>
             <TabsTrigger value="ai">AI Provider</TabsTrigger>
-            <TabsTrigger value="datadog">Datadog</TabsTrigger>
+            {FEATURE_FLAGS.DATADOG_ANALYTICS && (
+              <TabsTrigger value="datadog">Datadog</TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="jira">
@@ -256,39 +259,41 @@ export function SettingsForm({
             </Form>
           </TabsContent>
 
-          <TabsContent value="datadog">
-            <Form {...datadogForm}>
-              <form onSubmit={datadogForm.handleSubmit(handleDatadogSubmit)} className="space-y-4">
-                <FormField
-                  control={datadogForm.control}
-                  name="apiToken"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Datadog API Token</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Your Datadog API token" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={datadogForm.control}
-                  name="appToken"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Datadog App Token</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Your Datadog App token" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">Save Datadog Settings</Button>
-              </form>
-            </Form>
-          </TabsContent>
+          {FEATURE_FLAGS.DATADOG_ANALYTICS && (
+            <TabsContent value="datadog">
+              <Form {...datadogForm}>
+                <form onSubmit={datadogForm.handleSubmit(handleDatadogSubmit)} className="space-y-4">
+                  <FormField
+                    control={datadogForm.control}
+                    name="apiToken"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Datadog API Token</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Your Datadog API token" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={datadogForm.control}
+                    name="appToken"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Datadog App Token</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Your Datadog App token" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">Save Datadog Settings</Button>
+                </form>
+              </Form>
+            </TabsContent>
+          )}
         </Tabs>
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground">
