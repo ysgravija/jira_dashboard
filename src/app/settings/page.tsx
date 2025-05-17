@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { SettingsForm } from '@/components/dashboard/settings-form'
 import { JiraCredentials } from '@/lib/types/jira'
+import { AICredentials, OpenAICredentials } from '@/lib/types/ai-provider'
 import { loadCredentialsAsync } from '@/lib/storage'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -10,7 +11,7 @@ import { ArrowLeft } from 'lucide-react'
 
 export default function SettingsPage() {
   const [jiraCredentials, setJiraCredentials] = useState<JiraCredentials | null>(null)
-  const [openAIKey, setOpenAIKey] = useState<string>('')
+  const [aiCredentials, setAICredentials] = useState<AICredentials | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
   // Load saved credentials on component mount
@@ -25,10 +26,19 @@ export default function SettingsPage() {
           setJiraCredentials(savedJiraCredentials)
         }
         
-        // Load OpenAI credentials
-        const savedOpenAICredentials = await loadCredentialsAsync<{ apiKey: string }>('openai')
-        if (savedOpenAICredentials?.apiKey) {
-          setOpenAIKey(savedOpenAICredentials.apiKey)
+        // Load AI credentials
+        const savedAICredentials = await loadCredentialsAsync<AICredentials>('ai')
+        if (savedAICredentials) {
+          setAICredentials(savedAICredentials)
+        } else {
+          // For backward compatibility, check for OpenAI credentials
+          const savedOpenAICredentials = await loadCredentialsAsync<OpenAICredentials>('openai')
+          if (savedOpenAICredentials?.apiKey) {
+            setAICredentials({
+              provider: 'openai',
+              apiKey: savedOpenAICredentials.apiKey
+            })
+          }
         }
       } catch (error) {
         console.error('Failed to load credentials:', error)
@@ -44,8 +54,8 @@ export default function SettingsPage() {
     setJiraCredentials(credentials)
   }
   
-  const handleOpenAIKeySave = (apiKey: string) => {
-    setOpenAIKey(apiKey)
+  const handleAICredentialsSave = (credentials: AICredentials) => {
+    setAICredentials(credentials)
   }
   
   return (
@@ -68,9 +78,9 @@ export default function SettingsPage() {
           ) : (
             <SettingsForm 
               initialJiraCredentials={jiraCredentials || undefined}
-              initialOpenAIKey={openAIKey}
+              initialAICredentials={aiCredentials || undefined}
               onJiraCredentialsSave={handleJiraCredentialsSave}
-              onOpenAIKeySave={handleOpenAIKeySave}
+              onAICredentialsSave={handleAICredentialsSave}
             />
           )}
         </div>
@@ -78,7 +88,7 @@ export default function SettingsPage() {
       
       <div className="mt-8 text-center text-muted-foreground">
         <p className="max-w-2xl mx-auto">
-          Configure your API credentials for JIRA and OpenAI. These settings are stored securely
+          Configure your API credentials for JIRA and AI providers. These settings are stored securely
           and will be available even if you clear your browser data.
         </p>
         <p className="mt-4 text-sm">
@@ -97,7 +107,15 @@ export default function SettingsPage() {
             OpenAI Dashboard
           </a>
         </p>
+        <p className="mt-2 text-sm">
+          <strong>Anthropic API Key</strong>: Generate from the
+          <a href="https://console.anthropic.com/account/keys" 
+             target="_blank" rel="noopener noreferrer"
+             className="text-blue-500 hover:underline mx-1">
+            Anthropic Console
+          </a>
+        </p>
       </div>
     </div>
   )
-} 
+}

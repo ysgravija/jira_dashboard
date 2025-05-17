@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import { NextRequest, NextResponse } from 'next/server'
+import { AICredentials, OpenAICredentials } from '@/lib/types/ai-provider'
 import path from 'path'
 
 // Path for settings file
@@ -12,14 +13,11 @@ interface JiraCredentials {
   apiToken: string;
 }
 
-interface OpenAICredentials {
-  apiKey: string;
-}
-
 interface Settings {
   jira: JiraCredentials | null;
-  openai: OpenAICredentials | null;
-  [key: string]: JiraCredentials | OpenAICredentials | null; // Index signature for dynamic access
+  ai: AICredentials | null;
+  openai?: OpenAICredentials | null; // For backward compatibility
+  [key: string]: JiraCredentials | AICredentials | OpenAICredentials | null | undefined; // Index signature for dynamic access
 }
 
 // Ensure the data directory exists
@@ -45,6 +43,7 @@ async function loadSettings(): Promise<Settings> {
       // Create default settings file if it doesn't exist
       const defaultSettings: Settings = {
         jira: null,
+        ai: null,
         openai: null
       }
       await fs.writeFile(settingsFilePath, JSON.stringify(defaultSettings, null, 2))
@@ -55,7 +54,7 @@ async function loadSettings(): Promise<Settings> {
     return JSON.parse(data) as Settings
   } catch (error) {
     console.error('Error loading settings:', error)
-    return { jira: null, openai: null }
+    return { jira: null, ai: null, openai: null }
   }
 }
 
@@ -98,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Only allow specific setting types
-    if (type !== 'jira' && type !== 'openai') {
+    if (type !== 'jira' && type !== 'openai' && type !== 'ai') {
       return NextResponse.json(
         { error: 'Invalid setting type' },
         { status: 400 }
@@ -129,4 +128,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Card,
   CardContent,
@@ -26,6 +27,7 @@ import { JiraCredentials } from '@/lib/types/jira'
 import { saveCredentials } from '@/lib/storage'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
+import { AICredentials } from '@/lib/types/ai-provider'
 
 const jiraFormSchema = z.object({
   baseUrl: z.string().url('Please enter a valid URL'),
@@ -33,22 +35,25 @@ const jiraFormSchema = z.object({
   apiToken: z.string().min(1, 'API token is required'),
 })
 
-const openAIFormSchema = z.object({
+const aiFormSchema = z.object({
+  provider: z.enum(['openai', 'anthropic'], {
+    required_error: "Please select an AI provider",
+  }),
   apiKey: z.string().min(1, 'API key is required'),
 })
 
 interface SettingsFormProps {
   initialJiraCredentials?: JiraCredentials
-  initialOpenAIKey?: string
+  initialAICredentials?: AICredentials
   onJiraCredentialsSave: (credentials: JiraCredentials) => void
-  onOpenAIKeySave: (apiKey: string) => void
+  onAICredentialsSave: (credentials: AICredentials) => void
 }
 
 export function SettingsForm({
   initialJiraCredentials,
-  initialOpenAIKey,
+  initialAICredentials,
   onJiraCredentialsSave,
-  onOpenAIKeySave,
+  onAICredentialsSave,
 }: SettingsFormProps) {
   const [activeTab, setActiveTab] = useState<string>('jira')
 
@@ -61,10 +66,11 @@ export function SettingsForm({
     },
   })
 
-  const openAIForm = useForm<{ apiKey: string }>({
-    resolver: zodResolver(openAIFormSchema),
-    defaultValues: {
-      apiKey: initialOpenAIKey || '',
+  const aiForm = useForm<z.infer<typeof aiFormSchema>>({
+    resolver: zodResolver(aiFormSchema),
+    defaultValues: initialAICredentials || {
+      provider: 'openai',
+      apiKey: '',
     },
   })
 
@@ -86,19 +92,19 @@ export function SettingsForm({
     }
   }
 
-  const handleOpenAISubmit = async (values: { apiKey: string }) => {
+  const handleAISubmit = async (values: z.infer<typeof aiFormSchema>) => {
     try {
-      await saveCredentials('openai', { apiKey: values.apiKey })
-      onOpenAIKeySave(values.apiKey)
+      await saveCredentials('ai', values)
+      onAICredentialsSave(values)
       toast({
         title: 'Settings saved',
-        description: 'Your OpenAI API key has been saved in the application.',
+        description: `Your ${values.provider} API key has been saved.`,
       })
     } catch (error) {
-      console.error('Failed to save OpenAI API key:', error)
+      console.error('Failed to save AI API key:', error)
       toast({
         title: 'Error',
-        description: 'Failed to save OpenAI API key.',
+        description: 'Failed to save AI API key.',
         className: "bg-red-100 border-red-400 text-red-800",
       })
     }
@@ -109,14 +115,14 @@ export function SettingsForm({
       <CardHeader>
         <CardTitle>Settings</CardTitle>
         <CardDescription>
-          Configure your API credentials for JIRA and OpenAI
+          Configure your API credentials for JIRA and AI providers
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="jira">JIRA API</TabsTrigger>
-            <TabsTrigger value="openai">OpenAI API</TabsTrigger>
+            <TabsTrigger value="ai">AI Provider</TabsTrigger>
           </TabsList>
           
           <TabsContent value="jira">
@@ -166,23 +172,49 @@ export function SettingsForm({
             </Form>
           </TabsContent>
           
-          <TabsContent value="openai">
-            <Form {...openAIForm}>
-              <form onSubmit={openAIForm.handleSubmit(handleOpenAISubmit)} className="space-y-4">
+          <TabsContent value="ai">
+            <Form {...aiForm}>
+              <form onSubmit={aiForm.handleSubmit(handleAISubmit)} className="space-y-4">
                 <FormField
-                  control={openAIForm.control}
+                  control={aiForm.control}
+                  name="provider"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>AI Provider</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AI provider" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="openai">OpenAI</SelectItem>
+                          <SelectItem value="anthropic">Anthropic</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={aiForm.control}
                   name="apiKey"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>OpenAI API Key</FormLabel>
+                      <FormLabel>
+                        {aiForm.watch('provider')} API Key
+                      </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="sk-..." {...field} />
+                      <Input type="password" placeholder="sk-..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">Save OpenAI Settings</Button>
+                <Button type="submit" className="w-full">Save AI Settings</Button>
               </form>
             </Form>
           </TabsContent>
@@ -193,4 +225,4 @@ export function SettingsForm({
       </CardFooter>
     </Card>
   )
-} 
+}

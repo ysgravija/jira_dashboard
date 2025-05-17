@@ -1,6 +1,8 @@
+import { AICredentials, OpenAICredentials } from './types/ai-provider'
+
 // Storage utility for managing API credentials
 
-type CredentialType = 'jira' | 'openai';
+type CredentialType = 'jira' | 'ai' | 'openai';
 
 // Type definitions for credentials
 interface JiraCredentials {
@@ -9,11 +11,7 @@ interface JiraCredentials {
   apiToken: string;
 }
 
-interface OpenAICredentials {
-  apiKey: string;
-}
-
-type CredentialValue = JiraCredentials | OpenAICredentials | null;
+type CredentialValue = JiraCredentials | AICredentials | OpenAICredentials | null;
 
 /**
  * Save credentials to server file
@@ -67,4 +65,4 @@ export async function clearCredentials(type: CredentialType): Promise<void> {
     console.error(`Failed to clear ${type} credentials:`, error);
     throw error;
   }
-} 
+}
