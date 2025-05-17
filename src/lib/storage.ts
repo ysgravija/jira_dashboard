@@ -1,8 +1,9 @@
 import { AICredentials, OpenAICredentials } from './types/ai-provider'
+import { DatadogCredentials } from './types/datadog'
 
 // Storage utility for managing API credentials
 
-type CredentialType = 'jira' | 'ai' | 'openai';
+type CredentialType = 'jira' | 'ai' | 'openai' | 'datadog';
 
 // Type definitions for credentials
 interface JiraCredentials {
@@ -11,7 +12,7 @@ interface JiraCredentials {
   apiToken: string;
 }
 
-type CredentialValue = JiraCredentials | AICredentials | OpenAICredentials | null;
+type CredentialValue = JiraCredentials | AICredentials | OpenAICredentials | DatadogCredentials | null;
 
 /**
  * Save credentials to server file

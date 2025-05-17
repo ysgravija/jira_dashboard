@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Only allow specific setting types
-    if (type !== 'jira' && type !== 'openai' && type !== 'ai') {
+    if (type !== 'jira' && type !== 'openai' && type !== 'ai' && type !== 'datadog') {
       return NextResponse.json(
         { error: 'Invalid setting type' },
         { status: 400 }
